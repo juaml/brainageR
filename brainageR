@@ -65,6 +65,23 @@ spm_dir=/data/group/appliedml/kpatil/tools/matlab/spm12/
 matlab_path=/usr/bin/matlab98
 #FSLDIR=/usr/
 source /etc/fsl/fsl.sh
+
+# Kaustubh check for rds files
+if [ ! -f ${brainageR_dir}/software/pca_center.rds ]; then
+    echo "${brainageR_dir}/software/pca_center.rds file not found!"
+    exit 1
+fi
+
+if [ ! -f ${brainageR_dir}/software/pca_scale.rds ]; then
+    echo "${brainageR_dir}/software/pca_scale.rds file not found!"
+    exit 1
+fi
+
+if [ ! -f ${brainageR_dir}/software/pca_rotation.rds ]; then
+    echo "${brainageR_dir}/software/pca_rotation.rds file not found!"
+    exit 1
+fi
+
 ## run brainageR analysis
 ### SPM12 segmentation and normalisation
 cmd="$matlab_path -nosplash -nodesktop -r \"addpath(['$brainageR_dir','/software/']);spm_preprocess_brainageR('$full_path_file',['$brainageR_dir','/software/templates/'], '$spm_dir');exit\""
