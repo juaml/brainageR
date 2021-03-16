@@ -1,4 +1,5 @@
-#!/bin/sh
+#!/usr/bin/bash
+##!/bin/sh
 ## brainageR software, global wrapper script
 ## James Cole, University College London james.cole@ucl.ac.uk
 ## software version 2.1 Oct 2020
@@ -59,10 +60,11 @@ for software in R matlab fsl; do
 	if [ ! $software_check2 == "bin" ]; then echo $software not found; exit 1; fi
 done
 ## set software directories for your local system
-brainageR_dir=/home/jcole/Work/Brain\ ageing/brainageR
-spm_dir=/usr/local/spm12/
-matlab_path=/usr/local/bin/matlab
-FSLDIR=/usr/local/fsl/
+brainageR_dir=/data/project/brainage/brainageR/
+spm_dir=/data/group/appliedml/kpatil/tools/matlab/spm12/
+matlab_path=/usr/bin/matlab98
+#FSLDIR=/usr/
+source /etc/fsl/fsl.sh
 ## run brainageR analysis
 ### SPM12 segmentation and normalisation
 cmd="$matlab_path -nosplash -nodesktop -r \"addpath(['$brainageR_dir','/software/']);spm_preprocess_brainageR('$full_path_file',['$brainageR_dir','/software/templates/'], '$spm_dir');exit\""
