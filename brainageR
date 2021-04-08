@@ -48,7 +48,7 @@ fi
 full_path_file=`readlink -f $input_file`
 file_name=`basename -s .nii $full_path_file`
 full_path=`echo $full_path_file | sed -e "s@${file_name}.nii@@"`
-echo $full_path
+echo $full_path_file
 ## check files are uncompressed NIFTI fortmat
 if [[ $full_path_file != *.nii ]]; then usage; fi
 ## check software environment and attempt to load using module
@@ -84,7 +84,7 @@ fi
 
 ## run brainageR analysis
 ### SPM12 segmentation and normalisation
-cmd="$matlab_path -nosplash -nodesktop -r \"addpath(['$brainageR_dir','/software/']);spm_preprocess_brainageR('$full_path_file',['$brainageR_dir','/software/templates/'], '$spm_dir');exit\""
+cmd="$matlab_path -singleCompThread -nosplash -nodesktop -r \"addpath(['$brainageR_dir','/software/']);spm_preprocess_brainageR('$full_path_file',['$brainageR_dir','/software/templates/'], '$spm_dir');exit\""
 eval ${cmd}
 ### check that the pre-processing has completed
 if [ ! -f "${full_path}/smwc1${file_name}.nii" ]; then

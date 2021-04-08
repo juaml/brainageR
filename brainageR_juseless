@@ -1,0 +1,95 @@
+#!/usr/bin/bash
+
+if [ ! -f ${1} ]; then
+    echo "the first argument must be a file"
+    exit 1
+fi
+
+if [ -z "$2" ]; then
+    echo "need outdir"
+    exit 1
+fi
+outdir=${2}
+
+nproc=1
+if [ ! -z "$3" ]; then
+    nproc=$3
+fi
+nproc=$(( nproc + 0 ))
+if [ "$nproc" -le 0 ]; then
+    echo "number of processes must be > 0"
+    exit 1
+fi
+echo "will launch ${nproc} parallel processes"
+
+datalad="false"
+if [ -n "$4" ]; then
+    datalad=${4}
+fi
+echo "datalad: $datalad"
+
+dir=$(pwd)
+
+IFS=$'\n' read -d '' -r -a files < $1
+nfile=${#files[@]}
+echo "#files: ${nfile}"
+
+f1=0
+for f2 in `seq $nproc $nproc $nfile`; do
+    WORKDIR=`mktemp -d`
+    pids=()
+    for((i=$f1;i<$f2;i++)); do
+      nii="${files[i]}"
+      echo "input nii: $nii"
+      if [ "$datalad" = "true" ]; then
+        echo "datalad get"
+        cd `dirname $nii`
+        datalad get `basename $nii`
+        cd $dir
+      fi
+
+      filename=`basename $nii`
+      # copy the nifti to WORKDIR and drop it
+      cp $nii $WORKDIR
+      if [ "$datalad" = "true" ]; then
+          echo "datalad drop"
+          cd `dirname $nii`
+          datalad drop `basename $nii`
+          cd $dir
+      fi
+
+      nii=${WORKDIR}/${filename}
+      if [[ $nii == *.gz ]]; then
+        echo "gunzip: $nii"
+        gunzip $nii
+        nii=${nii/.gz/}
+      fi
+
+      echo "processing nii: $nii"
+      filename=`basename $nii`
+      filename=${filename/.nii/}
+      agefile=${outdir}/${filename}.csv
+      outfile=${outdir}/${filename}.out
+      errfile=${outdir}/${filename}.err
+      echo $agefile
+      echo $outfile
+      echo $errfile
+
+      # launch the process in bg as save its pid that we will wait for
+      ./brainageR -f ${nii} -o ${agefile} 2> $errfile > $outfile &
+      #( ./brainageR -f ${nii} -o ${agefile} & )
+      pids+=($!)
+    done
+    echo "waiting for processes: $f1-$f2"
+    echo $pids
+    #wait $pids
+    # wait for all pids
+    for pid in ${pids[@]}; do wait $pid; echo ret=$?; done
+    # remove the WORKDIR which contains all the preprocessed data etc
+    rm -fr $WORKDIR
+    f1=$f2
+done < ${1}
+
+
+
+
