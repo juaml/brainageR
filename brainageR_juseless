@@ -1,5 +1,5 @@
 #!/usr/bin/bash
-
+# get user inputs and check their sanity
 if [ ! -f ${1} ]; then
     echo "the first argument must be a file"
     exit 1
@@ -30,6 +30,7 @@ echo "datalad: $datalad"
 
 dir=$(pwd)
 
+# get all the files that we want to process
 IFS=$'\n' read -d '' -r -a files < $1
 nfile=${#files[@]}
 echo "#files: ${nfile}"
@@ -41,6 +42,8 @@ for f2 in `seq $nproc $nproc $nfile`; do
     for((i=$f1;i<$f2;i++)); do
       nii="${files[i]}"
       echo "input nii: $nii"
+
+      # if datalad controlled then get the file
       if [ "$datalad" = "true" ]; then
         echo "datalad get"
         cd `dirname $nii`
@@ -55,9 +58,11 @@ for f2 in `seq $nproc $nproc $nfile`; do
           echo "datalad drop"
           cd `dirname $nii`
           datalad drop `basename $nii`
+          # go back to original pwd where brainageR resides
           cd $dir
       fi
 
+      # gunzip as brainageR can't deal with it
       nii=${WORKDIR}/${filename}
       if [[ $nii == *.gz ]]; then
         echo "gunzip: $nii"
@@ -65,6 +70,7 @@ for f2 in `seq $nproc $nproc $nfile`; do
         nii=${nii/.gz/}
       fi
 
+      # setup for calling brainageR
       echo "processing nii: $nii"
       filename=`basename $nii`
       filename=${filename/.nii/}
@@ -82,14 +88,11 @@ for f2 in `seq $nproc $nproc $nfile`; do
     done
     echo "waiting for processes: $f1-$f2"
     echo $pids
-    #wait $pids
+    #wait $pids # this did not work
     # wait for all pids
     for pid in ${pids[@]}; do wait $pid; echo ret=$?; done
     # remove the WORKDIR which contains all the preprocessed data etc
     rm -fr $WORKDIR
     f1=$f2
-done < ${1}
-
-
-
+done
 
